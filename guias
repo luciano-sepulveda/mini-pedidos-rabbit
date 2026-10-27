@@ -1,0 +1,40 @@
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+
+2 ABRIR LOCAL HOST CREDENCIALES guest guest
+
+http://localhost:15672
+
+3 mini-pedidos (El microservicio consumidor que procesa los pedidos).
+
+cd ruta/a/mini-pedidos
+./mvnw spring-boot:run
+
+4 mini-pedidos-admin (El API REST / Administrador que publica mensajes en RabbitMQ)
+
+cd ruta/a/mini-pedidos-admin
+./mvnw spring-boot:run
+
+EJECUCION PRUEBAS 2
+
+MANDAR SOLICITUD
+
+curl.exe -X POST "http://localhost:8080/pedidos" -H "Content-Type: application/json" --data-binary "@pedido-prueba.json"
+
+PRUEBA FALLA 
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\scripts\probar-nack-rabbitmq.ps1"
+
+
+CREAR COLA 
+
+'{"name":"cola-prueba"}' | Set-Content cola.json -Encoding ascii
+curl.exe -X POST http://localhost:8081/queues -H "Content-Type: application/json" --data-binary "@cola.json"
+
+
+CREAR COLA MALA CON FALLA
+
+'{"name":""}' | Set-Content mala.json -Encoding ascii
+curl.exe -X POST http://localhost:8081/queues -H "Content-Type: application/json" --data-binary "@mala.json"
+
+5 MAVEN LIMPIA Y DESCARGA
+
+.\mvnw.cmd clean spring-boot:run
